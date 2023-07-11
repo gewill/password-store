@@ -8,7 +8,7 @@
 #
 # KeePassX 2+ on Mac allows export to CSV. The CSV contains the following
 # headers:
-# "Group","Title","Username","Password","URL","Notes"
+# "Group","Title","Username","Password","URL","Notes","TOTP"
 #
 # By default the pass entry will have the path Group/Title/Username and will
 # have the following structure:
@@ -17,6 +17,7 @@
 # user: <Username>
 # url: <URL>
 # notes: <Notes>
+# otpaauth: <TOTP>
 #
 # Any missing fields will be omitted from the entry. If Username is not present
 # the path will be Group/Title.
@@ -40,6 +41,7 @@ class KeepassCSVArgParser(argparse.ArgumentParser):
     Custom ArgumentParser class which prints the full usage message if the
     input file is not provided.
     """
+
     def error(self, message):
         print(message, file=sys.stderr)
         self.print_help()
@@ -83,7 +85,7 @@ def insert_file_contents(filename, preparation_args):
 
     entries = []
 
-    with open(filename, 'rU') as csv_in:
+    with open(filename, 'r') as csv_in:
         next(csv_in)
         csv_out = (line for line in csv.reader(csv_in, dialect='excel'))
         for row in csv_out:
@@ -130,6 +132,7 @@ def prepare_for_insertion(row, name_is_username=True, convert_to_lower=False,
     password = row[3]
     url = row[4]
     notes = row[5]
+    otpauth = row[6]
 
     if username and name_is_username:
         path += '/' + username
@@ -144,6 +147,9 @@ def prepare_for_insertion(row, name_is_username=True, convert_to_lower=False,
 
     if notes:
         data += 'notes: {}\n'.format(notes)
+
+    if otpauth:
+        data += 'otpauth: {}\n'.format(otpauth)
 
     return path, data
 
